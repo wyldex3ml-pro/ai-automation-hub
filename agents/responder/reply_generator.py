@@ -4,7 +4,7 @@ from groq import Groq
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 REPLY_PROMPT = """You are a professional business assistant writing email replies on behalf of an AI automation agency called "AI Automation Hub".
 
@@ -44,42 +44,3 @@ def generate_reply(email_data, classification):
         max_tokens=512
     )
     return response.choices[0].message.content.strip()
-
-
-if __name__ == "__main__":
-    from agents.classifier.email_classifier import classify_email
-
-    test_emails = [
-        {
-            "sender": "rahul@shopfast.in",
-            "subject": "Interested in your AI automation services",
-            "body": "Hi, I run a small e-commerce business and spending 4 hours a day on emails. Can you automate this? Budget is not an issue. Want to start this week."
-        },
-        {
-            "sender": "spam@random.com",
-            "subject": "MAKE MONEY FAST!!!",
-            "body": "Click here to earn 10000 per day from home. Limited offer!!!"
-        },
-        {
-            "sender": "priya@marketingpro.com",
-            "subject": "Partnership opportunity",
-            "body": "Hi, we are a digital marketing agency and would love to explore a partnership with your AI company. Can we schedule a call?"
-        }
-    ]
-
-    for email in test_emails:
-        print(f"\nEmail from: {email['sender']}")
-        classification = classify_email(
-            subject=email["subject"],
-            body=email["body"],
-            sender=email["sender"]
-        )
-        print(f"Category: {classification['category']} | Priority: {classification['priority']}")
-
-        reply = generate_reply(email, classification)
-
-        if reply is None:
-            print("Reply: SKIPPED — spam detected")
-        else:
-            print(f"\nGenerated Reply:\n{reply}")
-        print("-" * 60)

@@ -1,11 +1,11 @@
 import os
+import json
 from dotenv import load_dotenv
 from groq import Groq
-import json
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 CLASSIFY_PROMPT = """You are an expert business lead classifier.
 
@@ -35,31 +35,12 @@ def classify_email(subject, body, sender):
         max_tokens=512
     )
     raw = response.choices[0].message.content.strip()
+
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+
     result = json.loads(raw)
     return result
-
-if __name__ == "__main__":
-    test_emails = [
-        {
-            "subject": "Interested in your AI automation services",
-            "body": "Hi, I run a small e-commerce business and spending 4 hours a day on emails. Can you automate this? Budget is not an issue. Want to start this week.",
-            "sender": "rahul@shopfast.in"
-        },
-        {
-            "subject": "MAKE MONEY FAST!!!",
-            "body": "Click here to earn 10000 per day from home. Limited offer!!!",
-            "sender": "spam@random.com"
-        },
-        {
-            "subject": "Partnership opportunity",
-            "body": "Hi, we are a digital marketing agency and would love to explore a partnership with your AI company. Can we schedule a call?",
-            "sender": "priya@marketingpro.com"
-        }
-    ]
-
-    for email in test_emails:
-        print(f"\nProcessing: {email['subject']}")
-        print(f"From: {email['sender']}")
-        result = classify_email(**email)
-        print(f"Result: {json.dumps(result, indent=2)}")
-        print("-" * 50)
