@@ -1,10 +1,11 @@
 import os
+import requests
 from dotenv import load_dotenv
-from groq import Groq
 
 load_dotenv()
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 REPLY_PROMPT = """You are a professional business assistant writing email replies on behalf of an AI automation agency called "AI Automation Hub".
 
@@ -26,6 +27,19 @@ Rules:
 Write ONLY the email body. No subject line. No extra explanation.
 """
 
+def call_groq(prompt):
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 512
+    }
+    response = requests.post(GROQ_URL, headers=headers, json=data)
+    return response.json()["choices"][0]["message"]["content"].strip()
+
 def generate_reply(email_data, classification):
     if classification["suggested_reply_tone"] == "do_not_reply":
         return None
@@ -38,9 +52,4 @@ def generate_reply(email_data, classification):
         tone=classification["suggested_reply_tone"]
     )
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=512
-    )
-    return response.choices[0].message.content.strip()
+    return call_groq(prompt)

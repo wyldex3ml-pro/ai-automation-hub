@@ -1,11 +1,12 @@
 import os
 import json
+import requests
 from dotenv import load_dotenv
-from groq import Groq
 
 load_dotenv()
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 CLASSIFY_PROMPT = """You are an expert business lead classifier.
 
@@ -23,18 +24,26 @@ EMAIL BODY: {body}
 EMAIL FROM: {sender}
 """
 
+def call_groq(prompt):
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 512
+    }
+    response = requests.post(GROQ_URL, headers=headers, json=data)
+    return response.json()["choices"][0]["message"]["content"].strip()
+
 def classify_email(subject, body, sender):
     prompt = CLASSIFY_PROMPT.format(
         subject=subject,
         body=body,
         sender=sender
     )
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=512
-    )
-    raw = response.choices[0].message.content.strip()
+    raw = call_groq(prompt)
 
     if raw.startswith("```"):
         raw = raw.split("```")[1]
