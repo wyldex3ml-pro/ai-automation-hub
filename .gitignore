@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database
+data/leads.db
+
+# Logs
+logs/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
